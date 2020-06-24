@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+set -e
+
+export DK_VERSION="1.2.3"
+
+error() {
+    echo -e "\e[1m\e[31m$1\e[0m"
+}
+
+bold() {
+    echo -e "\e[36m$1\e[0m"
+}
+
+verbose() {
+    echo -e "\e[1m\e[30m$1\e[0m"
+}
+
+# Print help for dk itself
+show-dk-help() {
+    echo ""
+    echo "devkit: Devkit command runner"
+    echo ""
+    echo "usage: dk <command> [<args>]"
+    echo "usage: dk ls"
+    echo ""
+    exit 0
+}
+
+# Converts the specified command to an executable script path
+get-script-path() {
+    local command="$1"
+
+    local script_path="./devkit/commands/${command}.py"
+
+    if [ -f "$script_path" ]; then
+        echo "$script_path"
+        return
+    fi
+
+    script_path="./devkit-packages/commands/${command}.py"
+
+    if [ -f "$script_path" ]; then
+        echo "$script_path"
+        return
+    fi
+}
+
+bullet() {
+    while read line; do
+        echo "- $line"
+    done
+}
+
+list-dir() {
+    local dir="$1"
+    (
+        cd "$dir"
+        find . -maxdepth 1 -name "*.py" -type f -print | \
+            sed 's|^./||' | \
+            grep -v "^_" | \
+            grep -v "^default$" |
+            sed 's/.py$//' | \
+            bullet
+    )
+}
+
+# Prints a list of all available commands
+list() {
+    echo
+    echo "Project defined commands in ./devkit/commands:"
+    echo
+
+    list-dir "./devkit/commands"
+
+    echo
+    echo "Devkit commands in ./devkit-packages/commands:"
+    echo
+
+    list-dir "./devkit-packages/commands"
+}
+
+main() {
+    local command="$1"
+
+    local error_banner="dk ERROR:"
+
+
+    if [ "$command" = "" ] || [ "$command" = "help" ] || [ "$command" = "--help" ] || [ "$command" = "-h" ]; then
+        show-dk-help
+        exit 0
+    fi
+
+    if [ "$command" = "--version" ] || [ "$command" = "-v" ]; then
+        echo "dk: version $DK_VERSION"
+        exit 0
+    fi
+
+    if [ ! -d ./devkit-packages ]; then
+        error "$error_banner Expected to find devkit installed at ./devkit-packages, but it was missing. Did you install devkit?"
+        exit 1
+    fi
+
+    if [ "$command" = "ls" ]; then
+        echo "Available dk commands for this project:"
+        echo ""
+
+        list
+
+        echo ""
+        exit 0
+    fi
+
+    local script_path=$(get-script-path "$command")
+
+    if [ "$script_path" = "" ]; then
+
+        error "${error_banner}No file was found for ./devkit/commands/${command}.py or ./devkit-packages/commands/${command}.py"
+        
+        exit 1
+    fi
+
+    export PYTHONPATH="$(pwd)/devkit-packages/lib:${PYTHONPATH}"
+    local python_bin="python3"
+
+    # if which python3 > /dev/null; then
+
+    # fi
+
+    # Slice out first two arguments (bash, script path), and pass to the command script
+    python3 "$script_path" "${@:2}"
+}
+
+main "$@"
+
+

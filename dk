@@ -80,11 +80,112 @@ list() {
     list-dir "./devkit-packages/commands"
 }
 
+devkit-install-git-clone-internal() {
+    local repo="$1"
+    local temp_dir="$2"
+
+    local git_options="-c http.sslVerify=false -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=5000"
+
+    git $git_options clone "$repo" "$temp_dir"
+    if [ "$?" = "0" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+devkit-install-git-clone() {
+    local host_name="$1"
+    local repo_name="$2"
+    local temp_dir="$3"
+
+    echo " - Trying SSH connection to $host_name..."
+    echo
+
+    if devkit-install-git-clone-internal "git@${host_name}:${repo_name}.git" "$temp_dir"; then
+        return 0
+    fi
+
+    echo
+    echo " - SSH connection to $host_name failed, trying HTTPS"
+    echo
+
+    if devkit-install-git-clone-internal "https://${host_name}/${repo_name}.git" "$temp_dir"; then
+        return 0
+    fi
+}
+
+_devkit-validate-source-dir() {
+    if [ "$DEVKIT_SOURCE_DIR" = "" ]; then
+        echo "ERROR: You must export a variable 'DEVKIT_SOURCE_DIR' with the path of your devkit local repo."
+        exit 1
+    fi
+}
+
+devkit-install() {
+    local temp_dir="./tmp/devkit-packages"
+    rm -rf "$temp_dir"
+
+    if [ "$1" = "dev" ]; then
+        _devkit-validate-source-dir
+        cp -r "$DEVKIT_SOURCE_DIR" "$temp_dir"
+    else
+        echo "----------------------------------------"
+        echo "Pulling latest devkit from a git repo..."
+        echo "----------------------------------------"
+        echo
+        # local is_frb_network=false
+        # if nslookup github.firstrepublic.com > /dev/null; then
+        #     is_frb_network=true
+        #     echo " - Detected that you are on the FRB network, using github.firstrepublic.com..."
+        # else
+        #     echo " - Detected that you are NOT on the FRB network, using bitbucket.org/frb-special-projects..."
+        # fi
+
+        set +e
+        # if $is_frb_network; then
+        #     devkit-install-git-clone "github.firstrepublic.com" "FRB/devkit" "$temp_dir"
+        # else
+            devkit-install-git-clone "bitbucket.org" "frb-special-projects/devkit-python-poc" "$temp_dir"
+        # fi
+        set -e
+
+        if [ ! -d "$temp_dir" ]; then
+            echo
+            echo "ERROR: Devkit install failed!!!"
+            echo "Couldn't pull the latest devkit from a git repo"
+            exit 1
+        else
+            echo 
+            echo " - devkit cloned successfully. Installing now..."
+        fi
+    fi
+
+    python3 "$temp_dir/update-devkit-internal.py" "$@"
+}
+
+
 main() {
     local command="$1"
 
     local error_banner="dk ERROR:"
 
+    # Ensure python3+ is available
+
+    local python_bin="python3"
+    if ! which python3 > /dev/null; then
+        if ! which python > /dev/null; then
+            python_bin="python"
+            if ! which py > /dev/null; then
+                python_bin="py"
+            fi
+        fi
+    fi
+
+    local python_version=$("$python_bin" --version 2>&1)
+    if [[ ! $python_version =~ Python\ 3. ]]; then
+        error "Python version not supported: $python_version"
+    fi
 
     if [ "$command" = "" ] || [ "$command" = "help" ] || [ "$command" = "--help" ] || [ "$command" = "-h" ]; then
         show-dk-help
@@ -92,7 +193,12 @@ main() {
     fi
 
     if [ "$command" = "--version" ] || [ "$command" = "-v" ]; then
-        echo "dk: version $DK_VERSION"
+        echo "dk: version $DK_VERSION, $python_version"
+        exit 0
+    fi
+
+    if [ "$command" = "update-devkit" ]; then
+        devkit-install "${@:2}"
         exit 0
     fi
 
@@ -120,12 +226,11 @@ main() {
         exit 1
     fi
 
-    export PYTHONPATH="$(pwd)/devkit-packages/lib:${PYTHONPATH}"
-    local python_bin="python3"
+    # Setup PYTHONPATH to read from devkit directories
+    local current_dir="$(pwd)"
+    export PYTHONPATH="${current_dir}/devkit-packages:${current_dir}/devkit-override/:${PYTHONPATH}"
 
-    # if which python3 > /dev/null; then
-
-    # fi
+    echo "PYTHONPATH: $PYTHONPATH"
 
     # Slice out first two arguments (bash, script path), and pass to the command script
     python3 "$script_path" "${@:2}"

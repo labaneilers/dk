@@ -228,7 +228,7 @@ main() {
 
     # Setup PYTHONPATH to read from devkit directories
     local current_dir="$(pwd)"
-    export PYTHONPATH="${current_dir}/devkit-packages:${current_dir}/devkit/devkit-overrides/:${PYTHONPATH}"
+    export PYTHONPATH="${current_dir}/devkit/devkit-overrides/:${current_dir}/devkit-packages:${PYTHONPATH}"
 
     echo "PYTHONPATH: $PYTHONPATH"
 

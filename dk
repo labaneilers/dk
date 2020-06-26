@@ -128,6 +128,7 @@ devkit-install() {
 
     if [ "$1" = "dev" ]; then
         _devkit-validate-source-dir
+        mkdir -p "./tmp"
         cp -r "$DEVKIT_SOURCE_DIR" "$temp_dir"
     else
         echo "----------------------------------------"
@@ -161,7 +162,8 @@ devkit-install() {
         fi
     fi
 
-    python3 "$temp_dir/update-devkit-internal.py" "$@"
+    echo "running $temp_dir/update_devkit_internal.py"
+    python3 "$temp_dir/update_devkit_internal.py" "$@"
 }
 
 
@@ -172,17 +174,17 @@ main() {
 
     # Ensure python3+ is available
 
-    local python_bin="python3"
+    export PYTHON_BIN="python3"
     if ! which python3 > /dev/null; then
         if ! which python > /dev/null; then
-            python_bin="python"
+            PYTHON_BIN="python"
             if ! which py > /dev/null; then
-                python_bin="py"
+                PYTHON_BIN="py"
             fi
         fi
     fi
 
-    local python_version=$("$python_bin" --version 2>&1)
+    local python_version=$("$PYTHON_BIN" --version 2>&1)
     if [[ ! $python_version =~ Python\ 3. ]]; then
         error "Python version not supported: $python_version"
     fi
@@ -230,10 +232,10 @@ main() {
     local current_dir="$(pwd)"
     export PYTHONPATH="${current_dir}/devkit/devkit-overrides/:${current_dir}/devkit-packages:${PYTHONPATH}"
 
-    echo "PYTHONPATH: $PYTHONPATH"
+    #echo "PYTHONPATH: $PYTHONPATH"
 
     # Slice out first two arguments (bash, script path), and pass to the command script
-    python3 "$script_path" "${@:2}"
+    "$PYTHON_BIN" "$script_path" "${@:2}"
 }
 
 main "$@"

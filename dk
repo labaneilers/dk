@@ -162,7 +162,7 @@ devkit-install() {
         fi
     fi
 
-    echo "running $temp_dir/update_devkit_internal.py"
+    #echo "running $temp_dir/update_devkit_internal.py"
     python3 "$temp_dir/update_devkit_internal.py" "$@"
 }
 

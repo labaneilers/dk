@@ -116,8 +116,8 @@ devkit-install-git-clone() {
 }
 
 _devkit-validate-source-dir() {
-    if [ "$DEVKIT_SOURCE_DIR" = "" ]; then
-        echo "ERROR: You must export a variable 'DEVKIT_SOURCE_DIR' with the path of your devkit local repo."
+    if [ "$DEVKIT_SRC_DIR" = "" ]; then
+        echo "ERROR: You must export a variable 'DEVKIT_SRC_DIR' with the path of your devkit local repo."
         exit 1
     fi
 }
@@ -129,7 +129,7 @@ devkit-install() {
     if [ "$1" = "dev" ]; then
         _devkit-validate-source-dir
         mkdir -p "./tmp"
-        cp -r "$DEVKIT_SOURCE_DIR" "$temp_dir"
+        cp -r "$DEVKIT_SRC_DIR" "$temp_dir"
     else
         echo "----------------------------------------"
         echo "Pulling latest devkit from a git repo..."

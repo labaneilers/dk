@@ -223,7 +223,7 @@ main() {
 
     if [ "$script_path" = "" ]; then
 
-        error "${error_banner}No file was found for ./devkit/commands/${command}.py or ./devkit-packages/commands/${command}.py"
+        error "${error_banner}No file was found for ./devkit/commands/${command}.py or ./devkit-packages/devkit/commands/${command}.py"
         
         exit 1
     fi

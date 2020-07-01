@@ -38,7 +38,7 @@ get-script-path() {
         return
     fi
 
-    script_path="./devkit-packages/commands/${command}.py"
+    script_path="./devkit-packages/devkit/commands/${command}.py"
 
     if [ -f "$script_path" ]; then
         echo "$script_path"
@@ -74,7 +74,7 @@ list() {
     list-dir "./devkit/commands"
 
     echo
-    echo "Devkit commands in ./devkit-packages/commands:"
+    echo "Devkit commands in ./devkit-packages/devkit/commands:"
     echo
 
     list-dir "./devkit-packages/commands"

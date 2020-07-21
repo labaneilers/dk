@@ -17,75 +17,75 @@ verbose() {
 }
 
 # Print help for dk itself
-show-dk-help() {
-    echo ""
-    echo "devkit: Devkit command runner"
-    echo ""
-    echo "usage: dk <command> [<args>]"
-    echo "usage: dk ls"
-    echo ""
-    exit 0
-}
+# show-dk-help() {
+#     echo ""
+#     echo "devkit: Devkit command runner"
+#     echo ""
+#     echo "usage: dk <command> [<args>]"
+#     echo "usage: dk ls"
+#     echo ""
+#     exit 0
+# }
 
-get-packages-path() {
-    local devkit_packages_dir="./devkit-packages"
-    if [ ! "$DEVKIT_SRC_DIR" = "" ]; then
-        devkit_packages_dir="$DEVKIT_SRC_DIR"
-    fi
-    echo "$devkit_packages_dir"
-}
+# get-packages-path() {
+#     local devkit_packages_dir="./devkit-packages"
+#     if [ ! "$DEVKIT_SRC_DIR" = "" ]; then
+#         devkit_packages_dir="$DEVKIT_SRC_DIR"
+#     fi
+#     echo "$devkit_packages_dir"
+# }
 
-enumerate-paths() {
-    local command="$(to-snake-case "$1").py"
+# enumerate-paths() {
+#     local command="$(to-snake-case "$1").py"
 
-    echo "./devkit/commands/${command}"
-    echo "$(get-packages-path)/devkit/commands/${command}"
-}
+#     echo "./devkit/commands/${command}"
+#     echo "$(get-packages-path)/devkit/commands/${command}"
+# }
 
-bullet() {
-    while read line; do
-        echo "- $line"
-    done
-}
+# bullet() {
+#     while read line; do
+#         echo "- $line"
+#     done
+# }
 
-to-snake-case() {
-    echo "${1//-/_}"
-}
+# to-snake-case() {
+#     echo "${1//-/_}"
+# }
 
-list-dir() {
-    local dir="$1"
-    if [ -d "$dir" ]; then
-        (
-            cd "$dir"
-            find . -maxdepth 1 -name "*.py" -type f -print | \
-                sed 's|^./||' | \
-                grep -v "^_" | \
-                grep -v "^default$" |
-                sed 's/.py$//' | \
-                sed 's/_/-/' | \
-                bullet
-        )
-    else
-        echo "(none)"
-    fi
-}
+# list-dir() {
+#     local dir="$1"
+#     if [ -d "$dir" ]; then
+#         (
+#             cd "$dir"
+#             find . -maxdepth 1 -name "*.py" -type f -print | \
+#                 sed 's|^./||' | \
+#                 grep -v "^_" | \
+#                 grep -v "^default$" |
+#                 sed 's/.py$//' | \
+#                 sed 's/_/-/' | \
+#                 bullet
+#         )
+#     else
+#         echo "(none)"
+#     fi
+# }
 
-# Prints a list of all available commands
-list() {
-    echo
-    echo "Project defined commands in ./devkit/commands:"
-    echo
+# # Prints a list of all available commands
+# list() {
+#     echo
+#     echo "Project defined commands in ./devkit/commands:"
+#     echo
 
-    list-dir "./devkit/commands"
+#     list-dir "./devkit/commands"
 
-    local devkit_packages_dir="$(get-packages-path)/devkit/commands"
+#     local devkit_packages_dir="$(get-packages-path)/devkit/commands"
 
-    echo
-    echo "Devkit commands in $devkit_packages_dir:"
-    echo
+#     echo
+#     echo "Devkit commands in $devkit_packages_dir:"
+#     echo
 
-    list-dir "$devkit_packages_dir"
-}
+#     list-dir "$devkit_packages_dir"
+# }
 
 devkit-install-git-clone-internal() {
     local repo="$1"
@@ -197,10 +197,10 @@ main() {
         error "Python version not supported: $python_version"
     fi
 
-    if [ "$command" = "" ] || [ "$command" = "help" ] || [ "$command" = "--help" ] || [ "$command" = "-h" ]; then
-        show-dk-help
-        exit 0
-    fi
+    # if [ "$command" = "" ] || [ "$command" = "help" ] || [ "$command" = "--help" ] || [ "$command" = "-h" ]; then
+    #     show-dk-help
+    #     exit 0
+    # fi
 
     if [ "$command" = "--version" ] || [ "$command" = "-v" ]; then
         echo "dk: version $DK_VERSION, $python_version"
@@ -217,34 +217,34 @@ main() {
         exit 1
     fi
 
-    if [ "$command" = "ls" ]; then
-        echo "Available dk commands for this project:"
+    # if [ "$command" = "ls" ]; then
+    #     echo "Available dk commands for this project:"
 
-        list
+    #     list
 
-        echo ""
-        exit 0
-    fi
+    #     echo ""
+    #     exit 0
+    # fi
 
-    local all_paths="$(enumerate-paths "$command")"
-    local found_path
+#     local all_paths="$(enumerate-paths "$command")"
+#     local found_path
 
-    while read -r script_path; do
-        if [ -f "$script_path" ]; then
-            found_path="$script_path"
-            break
-        fi
-    done << EOF
-$all_paths
-EOF
+#     while read -r script_path; do
+#         if [ -f "$script_path" ]; then
+#             found_path="$script_path"
+#             break
+#         fi
+#     done << EOF
+# $all_paths
+# EOF
 
-    if [ "$found_path" = "" ]; then
-        error "${error_banner} No script was found at paths:"
-        echo "$all_paths" | while read script_path; do
-            error " - $script_path"
-        done
-        exit 1
-    fi
+    # if [ "$found_path" = "" ]; then
+    #     error "${error_banner} No script was found at paths:"
+    #     echo "$all_paths" | while read script_path; do
+    #         error " - $script_path"
+    #     done
+    #     exit 1
+    # fi
 
     # Setup PYTHONPATH to read from devkit directories
     local current_dir="$(pwd)"
@@ -255,12 +255,12 @@ EOF
         dev_dir="$DEVKIT_SRC_DIR"
     fi
 
-    export PYTHONPATH="${current_dir}/devkit/devkit-overrides:${dev_dir}:${PYTHONPATH}"
+    export PYTHONPATH="${current_dir}/devkit:${dev_dir}:${PYTHONPATH}"
 
     #echo "PYTHONPATH: $PYTHONPATH"
 
     # Slice out first two arguments (bash, script path), and pass to the command script
-    "$PYTHON_BIN" "$script_path" "${@:2}"
+    "$PYTHON_BIN" "${dev_dir}/run_command.py" "$command" "${@:2}"
 }
 
 main "$@"

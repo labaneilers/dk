@@ -71,20 +71,20 @@ devkit-install() {
         echo "Pulling latest devkit from a git repo..."
         echo "----------------------------------------"
         echo
-        # local is_frb_network=false
-        # if nslookup github.firstrepublic.com > /dev/null; then
-        #     is_frb_network=true
-        #     echo " - Detected that you are on the FRB network, using github.firstrepublic.com..."
-        # else
-        #     echo " - Detected that you are NOT on the FRB network, using bitbucket.org/frb-special-projects..."
-        # fi
+        local is_frb_network=false
+        if nslookup github.firstrepublic.com > /dev/null; then
+            is_frb_network=true
+            echo " - Detected that you are on the FRB network, using github.firstrepublic.com..."
+        else
+            echo " - Detected that you are NOT on the FRB network, using bitbucket.org/frb-special-projects..."
+        fi
 
         set +e
-        # if $is_frb_network; then
-        #     devkit-install-git-clone "github.firstrepublic.com" "FRB/devkit" "$temp_dir"
-        # else
+        if $is_frb_network; then
+            devkit-install-git-clone "github.firstrepublic.com" "DEVX/devkit" "$temp_dir"
+        else
             devkit-install-git-clone "bitbucket.org" "frb-special-projects/devkit-python-poc" "$temp_dir"
-        # fi
+        fi
         set -e
 
         if [ ! -d "$temp_dir" ]; then

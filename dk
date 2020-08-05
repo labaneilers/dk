@@ -100,30 +100,87 @@ devkit-install() {
     fi
 
     #echo "running $temp_dir/update_devkit_internal.py"
-    python3 "$temp_dir/update_devkit_internal.py" "$@"
+    "$PYTHON_BIN" "$temp_dir/update_devkit_internal.py" "$@"
 }
 
+is-windows() {
+    uname_output="$(uname -s)"
+    case "$uname_output" in
+        Linux*)     target_os=linux;;
+        Darwin*)    target_os=darwin;;
+        CYGWIN*)    target_os=windows;;
+        MINGW*)     target_os=windows;;
+        *MSYS*)     target_os=windows;;
+        *)          target_os="UNKNOWN:${uname_output}"
+    esac
+    if [ "$target_os" = "windows" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+python_windows_bins="py
+python3
+$HOME/AppData/Local/Programs/Python/Launcher/py
+$HOME/AppData/Local/Microsoft/WindowsApps/python3.exe
+/c/WINDOWS/py.exe
+"
+
+python_unix_bins="python3
+python"
+
+test-python() {
+    local bin_path="$1"
+    if command -v "$bin_path" &> /dev/null; then
+        local python_version=$("$bin_path" --version 2>&1)
+        if [[ $python_version =~ Python\ 3. ]]; then
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+choose-python-from-list() {
+    local list="$1"
+    local python_bin=""
+
+    while read bin_path; do
+        if test-python "$bin_path"; then
+            python_bin="$bin_path"
+            break
+        fi
+    done << EOF
+$list
+EOF
+
+     echo "$python_bin"
+}
+
+get-python() {
+    if [ ! "$PYTHON_BIN" = "" ]; then
+        echo "$PYTHON_BIN"
+    elif is-windows; then
+       choose-python-from-list "$python_windows_bins"
+    else
+        choose-python-from-list "$python_unix_bins"
+    fi
+}
 
 main() {
     local command="$1"
 
     local error_banner="dk ERROR:"
 
-    # Ensure python3+ is available
-
-    export PYTHON_BIN="python3"
-    if ! which python3 > /dev/null; then
-        if ! which python > /dev/null; then
-            PYTHON_BIN="python"
-            if ! which py > /dev/null; then
-                PYTHON_BIN="py"
-            fi
-        fi
-    fi
-
-    local python_version=$("$PYTHON_BIN" --version 2>&1)
-    if [[ ! $python_version =~ Python\ 3. ]]; then
-        error "Python version not supported: $python_version"
+    export PYTHON_BIN=$(get-python)
+    if [ "$PYTHON_BIN" = "" ]; then
+        echo "ERROR: Couldn't find a valid python3 binary." >&2
+        echo "If you don't have python3 installed, you should install it:" >&2
+        echo "https://www.python.org/downloads/" >&2
+        echo "If you have a python3 installed, you can fix this manually by either:" >&2
+        echo " - adding the directory of your python3 to your PATH" >&2
+        echo " - setting PYTHON_BIN to the path of your python3 binary" >&2
     fi
 
     if [ "$command" = "--version" ] || [ "$command" = "-v" ]; then

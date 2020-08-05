@@ -62,10 +62,15 @@ devkit-install() {
     local temp_dir="./tmp/devkit-packages"
     rm -rf "$temp_dir"
 
-    if [ "$1" = "dev" ]; then
-        _devkit-validate-source-dir
+    if [ ! "$DEVKIT_SRC_DIR" = "" ]; then
+        echo "----------------------------------------"
+        echo "Pulling latest devkit from $DEVKIT_SRC_DIR..."
+        echo "----------------------------------------"
+        echo
         mkdir -p "./tmp"
         cp -r "$DEVKIT_SRC_DIR" "$temp_dir"
+        echo " - Devkit copied successfully. Running installer..."
+        echo
     else
         echo "----------------------------------------"
         echo "Pulling latest devkit from a git repo..."

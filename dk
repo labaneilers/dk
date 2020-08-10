@@ -77,7 +77,8 @@ devkit-install() {
         echo "----------------------------------------"
         echo
         local is_frb_network=false
-        if nslookup github.firstrepublic.com > /dev/null; then
+        local nslookup_response="$(nslookup github.firstrepublic.com 2>&1 | grep -v "can't find github.firstrepublic.com")"
+        if [ "$nslookup_response" = "" ]; then
             is_frb_network=true
             echo " - Detected that you are on the FRB network, using github.firstrepublic.com..."
         else
